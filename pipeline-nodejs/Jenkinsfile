@@ -1,0 +1,37 @@
+pipeline {
+    agent { 
+        label "docker"
+    }
+    environment {
+        containerName="simplefolio"
+        tag="1.0"
+        //TODO: параметризированный пайплайн?
+        internalHttpPort="1234"
+        externalHttpPort="8000"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh "docker rmi -f $containerName:$tag"
+                sh "docker build -t $containerName:$tag --no-cache ."
+            }
+        }
+
+        //TODO: создать артефакт - какое хранилище?
+
+        //TODO: перенести в отдельную задачу
+        stage('Deploy') {
+            steps {
+                sh "docker run -d --rm -p $externalHttpPort:$internalHttpPort --name $containerName $containerName:$tag"
+                echo "Application successfully started on port ${externalHttpPort} (http)"
+            }
+        }
+    }
+}
