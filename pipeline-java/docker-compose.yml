@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  opentest_server:
+    container_name: opentest_server
+    build: 
+      context: .
+      dockerfile: server.Dockerfile
+    ports:
+    - 3000:3000
+    restart: on-failure
+
+  opentest_actor:
+    container_name: opentest_actor
+    build:
+      context: .
+      dockerfile: actor.Dockerfile
+    depends_on:
+    - opentest_server
+    restart: on-failure
