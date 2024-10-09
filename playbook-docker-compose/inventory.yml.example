@@ -1,0 +1,10 @@
+ungrouped:
+  hosts:
+    controller:
+      ansible_host:
+linux_srv:
+  hosts:
+    server:
+      ansible_host:
+      ansible_connection: ssh
+      ansible_user:

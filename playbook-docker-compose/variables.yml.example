@@ -1,0 +1,4 @@
+source_path: './app'
+destination_path: ''
+project_name: 'wordpress'
+nginx_server_ip: ''

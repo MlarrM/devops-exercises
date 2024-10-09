@@ -1,0 +1,47 @@
+---
+- 
+  name: Update docker compose stack (php, nginx, mysql)
+  hosts: linux_srv
+
+  tasks:
+  - name: Copy project files
+    ansible.builtin.copy:
+      src: '{{ source_path }}/'
+      dest: '{{ destination_path }}/{{ project_name }}'
+
+  - name: Generate nginx configuration file
+    ansible.builtin.lineinfile:
+      path: '{{ destination_path }}/{{ project_name }}/docker/nginx/wordpress-fpm.conf'
+      regexp: 'server_name nginx_server_ip;'
+      line: 'server_name {{ nginx_server_ip }};'
+
+  - name: Stop all docker compose services
+    community.docker.docker_compose_v2:
+      project_src: '{{ destination_path }}/{{ project_name }}'
+      state: absent
+
+  - name: Deploy containers using docker compose
+    community.docker.docker_compose_v2:
+      project_src: '{{ destination_path }}/{{ project_name }}'
+      state: present 
+      build: always
+      wait: true
+      wait_timeout: 20
+    register: output
+
+  - name: Verify that containers are running (healthcheck)
+    ansible.builtin.assert:
+      that:
+        - proxy.State == 'running'
+        - php.State == 'running'
+        - mysql.State == 'running'
+    vars:
+      proxy: >-
+        {{ output.containers | selectattr("Service", "equalto", "proxy") | first }}
+      php: >-
+        {{ output.containers | selectattr("Service", "equalto", "php-app") | first }}
+      mysql: >-
+        {{ output.containers | selectattr("Service", "equalto", "mysql") | first }}
+
+  vars_files:
+    - variables.yml
